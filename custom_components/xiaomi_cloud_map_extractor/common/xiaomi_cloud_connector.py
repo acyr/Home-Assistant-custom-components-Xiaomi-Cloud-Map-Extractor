@@ -20,6 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 class XiaomiCloudConnector:
 
     def __init__(self, username: str, password: str):
+        self.two_factor_auth_url = None
         self._username = username
         self._password = password
         self._agent = self.generate_agent()
@@ -82,6 +83,7 @@ class XiaomiCloudConnector:
                 self._passToken = json_resp["passToken"]
                 self._location = json_resp["location"]
                 self._code = json_resp["code"]
+                self.two_factor_auth_url = None
             else:
                 if "notificationUrl" in json_resp:
                     _LOGGER.error(
@@ -89,6 +91,7 @@ class XiaomiCloudConnector:
                         "Open following URL using device that has the same public IP, " +
                         "as your Home Assistant instance: %s ",
                         json_resp["notificationUrl"])
+                    self.two_factor_auth_url = json_resp["notificationUrl"]
                     successful = None
 
         return successful
@@ -199,12 +202,12 @@ class XiaomiCloudConnector:
 
     @staticmethod
     def generate_agent() -> str:
-        agent_id = "".join(map(lambda i: chr(i), [random.randint(65, 69) for _ in range(13)]))
+        agent_id = "".join((chr(random.randint(65, 69)) for _ in range(13)))
         return f"Android-7.1.1-1.0.0-ONEPLUS A3010-136-{agent_id} APP/xiaomi.smarthome APPV/62830"
 
     @staticmethod
     def generate_device_id() -> str:
-        return "".join(map(lambda i: chr(i), [random.randint(97, 122) for _ in range(6)]))
+        return "".join((chr(random.randint(97, 122)) for _ in range(6)))
 
     @staticmethod
     def generate_signature(url, signed_nonce: str, nonce: str, params: Dict[str, str]) -> str:
